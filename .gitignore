@@ -1,0 +1,4 @@
+.DS_Store
+
+# Local preview server — dev only, not part of the published site
+serve.py
