@@ -1,0 +1,631 @@
+@charset "UTF-8";
+
+/*
+    anshnagwekar.github.io
+    Hand-written. No preprocessor, no build step — edit this file directly.
+    Design lineage: "Identity" by HTML5 UP (html5up.net), CCA 3.0.
+*/
+
+/* ============================================================
+   Tokens
+   ============================================================ */
+
+:root {
+    --sheet:        rgba(255, 255, 255, 0.955);
+    --ink:          #37444c;
+    --ink-strong:   #1e2a31;
+    --ink-soft:     #6b7880;
+    --rule:         #e3e6e9;
+    --pill:         #f1f3f5;
+    --link:         #0f7c93;
+    --link-hover:   #00a9cc;
+    --icon:         #b9c0c6;
+
+    --shadow:       0 1px 2px rgba(16, 24, 32, 0.06),
+                    0 18px 44px -16px rgba(16, 24, 32, 0.42);
+
+    --radius:       6px;
+    --track:        0.2em;      /* the letter-spacing that defines this design */
+    --flip:         0.85s cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --sheet:      rgba(19, 22, 28, 0.94);
+        --ink:        #c2ccd3;
+        --ink-strong: #eef3f6;
+        --ink-soft:   #8a959d;
+        --rule:       #2a3037;
+        --pill:       #232931;
+        --link:       #4fd2ee;
+        --link-hover: #93e7fa;
+        --icon:       #5d686f;
+        --shadow:     0 1px 2px rgba(0, 0, 0, 0.4),
+                      0 20px 48px -18px rgba(0, 0, 0, 0.8);
+    }
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background-color: #10141c;
+    color: var(--ink);
+    font-family: "Source Sans 3", "Source Sans Pro", -apple-system,
+                 BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+}
+
+@media screen and (max-width: 640px) {
+    body { font-size: 16px; }
+}
+
+/* The dusk photo, held still behind everything.
+   A fixed element rather than background-attachment: fixed, which janks on iOS. */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: #10141c;
+    background-image: url("../../images/bg.jpg");
+    background-size: cover;
+    background-position: center 30%;
+    background-repeat: no-repeat;
+}
+
+.backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        url("images/overlay.png"),
+        linear-gradient(165deg,
+            rgba(255, 165, 150, 0.18) 0%,
+            rgba(0, 0, 0, 0) 40%,
+            rgba(8, 10, 16, 0.55) 100%);
+    background-repeat: repeat, no-repeat;
+    background-size: 100px 100px, cover;
+}
+
+a {
+    color: var(--link);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+a:hover {
+    color: var(--link-hover);
+    border-bottom-color: currentColor;
+}
+
+:focus-visible {
+    outline: 2px solid var(--link-hover);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+/* ============================================================
+   Layout — one card, centred, vertically
+   ============================================================ */
+
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: clamp(1rem, 4vw, 2.5rem) clamp(0.75rem, 4vw, 1.5rem);
+}
+
+.stage {
+    flex: 1 1 auto;
+    display: flex;
+}
+
+.flip {
+    /* margin:auto (rather than justify-content) centres the card but still lets
+       it scroll into view when it is taller than the viewport. */
+    margin: auto;
+    width: 100%;
+    max-width: 35rem;
+    perspective: 1800px;
+}
+
+.flip-inner {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform var(--flip), height var(--flip);
+}
+
+.js .flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+
+/* Set by JS for one frame on load, so the card doesn't animate into place. */
+.flip.is-settling .flip-inner { transition: none; }
+
+/* Faces receive focus after a flip; never show a ring for that. */
+.face:focus { outline: none; }
+
+.face {
+    background: var(--sheet);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: clamp(1.75rem, 5vw, 2.75rem) clamp(1.5rem, 5vw, 3rem);
+}
+
+/* Only once JS is running do the faces stack in 3D. Without it they simply
+   flow down the page and everything stays readable. */
+.js .face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.js .front { transform: rotateY(0deg); }
+
+.js .back {
+    display: none;
+    transform: rotateY(180deg);
+    text-align: left;
+}
+
+.js .back.is-active { display: block; }
+
+/* No-JS: separate the stacked cards a little. */
+.face + .face { margin-top: 1.25rem; }
+.js .face + .face { margin-top: 0; }
+
+/* Scroll region inside a flipped face */
+
+.face-body {
+    max-height: 62vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.75rem;
+    margin-right: -0.75rem;
+}
+
+.face-body::-webkit-scrollbar { width: 7px; }
+.face-body::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(128, 138, 148, 0.35);
+}
+
+.face-body { scrollbar-width: thin; }
+
+/* Fade at the bottom edge, added by JS only when there is more to scroll. */
+.back.is-scrollable .face-body {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent 100%);
+}
+
+.back.is-scrollable.is-at-end .face-body {
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+.face-actions {
+    margin: 1.75rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    text-align: center;
+}
+
+/* ============================================================
+   Type
+   ============================================================ */
+
+h1, h2, h3 {
+    color: var(--ink-strong);
+    font-weight: 400;
+    margin: 0;
+    line-height: 1.35;
+}
+
+h1 {
+    font-size: clamp(1.6rem, 5vw, 2rem);
+    font-weight: 300;
+    letter-spacing: var(--track);
+    text-transform: uppercase;
+    /* letter-spacing adds a trailing gap; pull it back so the text optically centres */
+    margin: 0 0 0.35em calc(var(--track) * -1);
+}
+
+h2 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: var(--track);
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-bottom: 0.9em;
+    margin-bottom: 1.6em;
+    border-bottom: 1px solid var(--rule);
+}
+
+h3 {
+    font-size: 1.06rem;
+    font-weight: 600;
+}
+
+p { margin: 0 0 1.1em; }
+p:last-child { margin-bottom: 0; }
+
+em { font-style: italic; }
+
+.prose p { max-width: 40em; }
+
+/* Pronunciation respellings — quieter than the sentence around them. */
+.pron {
+    color: var(--ink-soft);
+    font-size: 0.88em;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   Front of the card
+   ============================================================ */
+
+/* The front holds very little, so it gets tighter padding than the text faces. */
+.front {
+    text-align: center;
+    padding: clamp(1.75rem, 4vw, 2.25rem) clamp(1.5rem, 5vw, 2.5rem) clamp(1.5rem, 3vw, 1.75rem);
+}
+
+.avatar {
+    display: block;
+    width: 112px;
+    height: 112px;
+    margin: 0 auto 1.25rem;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 6px var(--sheet), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+}
+
+.tagline {
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink);
+    /* letter-spacing adds a trailing gap; pull it back so the line optically centres */
+    margin: 0 0 1.4rem -0.13em;
+}
+
+.hero-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4em 1.6em;
+    padding: 1em 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+}
+
+.hero-nav a {
+    color: var(--ink);
+    font-size: 0.92rem;
+    font-weight: 400;
+    /* slightly tighter than --track so three items still fit one line on a phone */
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+.hero-nav a:hover { color: var(--link-hover); }
+
+/* Social icons */
+
+.socials {
+    display: flex;
+    justify-content: center;
+    gap: 1.6rem;
+    list-style: none;
+    margin: 0.9rem 0 0;
+    padding: 0;
+}
+
+/* Covers both the real links and the email icon, which is a span by design. */
+.socials li > * {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    border-bottom: 0;
+    transition: background-color 0.18s ease;
+}
+
+.socials svg {
+    width: 1.95rem;
+    height: 1.95rem;
+    fill: var(--icon);
+    transition: fill 0.18s ease, transform 0.18s ease;
+}
+
+.socials li > *:hover { background-color: var(--pill); }
+.socials li > *:hover svg { fill: var(--link-hover); transform: translateY(-1px); }
+
+/* Nothing to click — it only reveals the address below. */
+.mail-hint { cursor: default; }
+
+/* Handle that appears under the icons on hover. Height is reserved so
+   nothing below it shifts when the text appears. */
+.hover-readout {
+    min-height: 1.2em;
+    margin: 0.1rem 0 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.hover-readout.is-visible { opacity: 1; }
+
+/* ============================================================
+   Button
+   ============================================================ */
+
+.button {
+    display: inline-block;
+    padding: 0.5em 1.9em;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-size: 0.76rem;
+    letter-spacing: var(--track);
+    text-transform: uppercase;
+    transition: border-color 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+}
+
+.button:hover {
+    border-color: var(--link-hover);
+    color: var(--link-hover);
+    background-color: var(--pill);
+}
+
+/* ============================================================
+   Research entries
+   ============================================================ */
+
+.entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.entry + .entry {
+    margin-top: 2.25rem;
+    padding-top: 2.25rem;
+    border-top: 1px solid var(--rule);
+}
+
+.entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25em 1em;
+    margin-bottom: 0.55em;
+}
+
+.entry-head h3 { flex: 1 1 auto; }
+
+.entry-head a {
+    color: inherit;
+    border-bottom-color: var(--rule);
+}
+
+.entry-head a:hover {
+    color: var(--link-hover);
+    border-bottom-color: currentColor;
+}
+
+.when {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    white-space: nowrap;
+}
+
+.role {
+    color: var(--ink-strong);
+    font-style: italic;
+    margin-bottom: 0.35em;
+}
+
+.dot {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    margin: 0 0.4em 0.2em;
+    border-radius: 50%;
+    background: var(--icon);
+    vertical-align: middle;
+}
+
+/* Publications */
+
+.papers {
+    list-style: none;
+    margin: 1.4em 0 0;
+    padding: 0;
+}
+
+.papers li {
+    padding-left: 0.9em;
+    border-left: 2px solid var(--rule);
+    line-height: 1.55;
+}
+
+.papers li + li { margin-top: 1.1em; }
+
+.papers a {
+    display: inline-block;
+    color: var(--ink-strong);
+    border-bottom-color: var(--rule);
+}
+
+.papers a:hover { color: var(--link-hover); border-bottom-color: currentColor; }
+
+.paper-meta {
+    display: block;
+    margin-top: 0.15em;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+.paper-meta strong { font-weight: 600; color: var(--ink); }
+
+/* Course projects.
+   Same family as .papers, but these are unpublished and have nothing to link
+   to, so they stay deliberately plainer — no accent rule, no link colour —
+   and can't be mistaken at a glance for the peer-reviewed work above. */
+
+.projects {
+    list-style: none;
+    margin: 1.4em 0 0;
+    padding: 0;
+}
+
+.projects > li + li {
+    margin-top: 1.5em;
+    padding-top: 1.5em;
+    border-top: 1px dashed var(--rule);
+}
+
+.projects h4 {
+    margin: 0 0 0.4em;
+    color: var(--ink-strong);
+    font-size: 0.97rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.projects p {
+    margin: 0 0 0.45em;
+    font-size: 0.93rem;
+    line-height: 1.62;
+}
+
+/* ============================================================
+   Quotes
+   ============================================================ */
+
+.quotes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.quote {
+    text-align: center;
+    max-width: 34em;
+    margin-inline: auto;
+}
+
+.quote + .quote {
+    margin-top: 2.1rem;
+    padding-top: 2.1rem;
+    border-top: 1px solid var(--rule);
+}
+
+.quote blockquote { margin: 0; }
+
+.quote p { margin: 0 0 0.3em; }
+
+.quote blockquote p {
+    font-size: 1.05rem;
+    color: var(--ink-strong);
+    line-height: 1.65;
+    text-wrap: balance;
+}
+
+/* A paragraph-length quote. Centring reads fine for a line or two but turns
+   into ragged soup over a full passage, so these run flush left and a shade
+   smaller. The attribution below stays centred with everything else. */
+.quote.is-long blockquote p {
+    text-align: left;
+    text-wrap: pretty;
+    font-size: 0.98rem;
+}
+
+/* Lyric set as verse: the line breaks are deliberate, so don't let the
+   balancer second-guess them. */
+.quote .verse p {
+    text-wrap: normal;
+    line-height: 1.85;
+}
+
+/* Greek runs a touch larger, with its respelling and gloss beneath it. */
+.quote [lang="grc"] {
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+}
+
+.quote .pron {
+    font-size: 0.85rem;
+    font-style: italic;
+    white-space: normal;
+    color: var(--ink-soft);
+}
+
+.quote .gloss {
+    margin-top: 0.7em;
+    color: var(--ink);
+}
+
+.quote .attrib {
+    margin: 0.6em 0 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+.quote cite {
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   Motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .flip-inner { transition: none; }
+    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ============================================================
+   Print
+   ============================================================ */
+
+@media print {
+    .backdrop, .socials, .hero-nav, .face-actions { display: none; }
+    body { font-size: 11pt; color: #000; }
+    .js .face {
+        position: static;
+        display: block !important;
+        transform: none !important;
+        box-shadow: none;
+        background: none;
+        padding: 0 0 1.5rem;
+    }
+    .flip-inner { transform: none !important; height: auto !important; }
+    .face-body { max-height: none; overflow: visible; }
+    a { color: #000; }
+}
